@@ -45,9 +45,11 @@ namespace BluetoothFTMS
             // Escanea dispositivos Bluetooth
             var devices = await Bluetooth.ScanForDevicesAsync();
 
+            string deviceName = isIndoorBike ? "B01_89CFE" : "C01_89CFE";
+
             // Filtra dispositivos compatibles con FTMS
-            var ftmsDevice = devices.FirstOrDefault(d => d.Name.Contains("C01_89CFE"));
-            
+            var ftmsDevice = devices.FirstOrDefault(d => d.Name.Contains(deviceName));
+
             if (ftmsDevice == null)
             {
                 Console.WriteLine("No se encontró ningún dispositivo FTMS.");
@@ -70,7 +72,15 @@ namespace BluetoothFTMS
             }
             // Obtener características del servicio FTMS
             var characteristics = await ftmsService.GetCharacteristicsAsync();
-            var characteristic = characteristics.FirstOrDefault(c => c.Uuid == GattCharacteristicUuids.CrossTrainerData);
+            GattCharacteristic characteristic;
+            if (isIndoorBike)
+            {
+                characteristic = characteristics.FirstOrDefault(c => c.Uuid == GattCharacteristicUuids.IndoorBikeData);
+            }
+            else
+            {
+                characteristic = characteristics.FirstOrDefault(c => c.Uuid == GattCharacteristicUuids.CrossTrainerData);
+            }
 
             if (characteristic == null)
             {
@@ -109,7 +119,7 @@ namespace BluetoothFTMS
             }
         }
 
-        private static void ProcessIndoorBikeData(Span<byte> data)
+        private static void ProcessIndoorBikeDataT(Span<byte> data)
         {
             // Decodificar los datos según el protocolo FTMS para Indoor Bike
             if (data.Length >= 2)
@@ -309,7 +319,6 @@ namespace BluetoothFTMS
         public static void ProcessCrossTrainerData(Span<byte> data)
         {
             var result = data.ToArray();
-
 
             var flags1 = result[0];
             var flags2 = result[1];
@@ -563,6 +572,129 @@ namespace BluetoothFTMS
             return result;
         }
 
+
+
+        public static void ProcessIndoorBikeData(Span<byte> data)
+        {
+            var result = data.ToArray();
+
+            var flags1 = result[0];
+            var flags2 = result[1];
+            BitArray flags = new BitArray(new byte[] { flags1, flags2 });
+            int currentPos = 2;
+
+            if (!flags.Get(0))
+            {
+                var InstantSpeed = BitConverter.ToUInt16(result, currentPos) * 0.01f;
+                currentPos += 2;
+
+                Console.WriteLine("Instant Speed: " + InstantSpeed);
+            }
+
+            if (flags.Get(1))
+            {
+                var AvgSpeedM = BitConverter.ToUInt16(result, currentPos) * 0.01f;
+                currentPos += 2;
+
+                Console.WriteLine("Avg Speed: " + AvgSpeedM);
+            }
+
+
+            if (flags.Get(2))
+            {
+                var InstantaneousCadence = BitConverter.ToUInt16(result, currentPos) * 0.5f;
+                currentPos += 2;
+
+                Console.WriteLine("Instantaneous cadence: " + InstantaneousCadence);
+            }
+            if (flags.Get(3))
+            {
+                var AvgCadence = BitConverter.ToUInt16(result, currentPos) * 0.5f;
+                currentPos += 2;
+
+                Console.WriteLine("Avg cadence: " + AvgCadence);
+            }
+            if (flags.Get(4))
+            {
+
+                uint totalDistanceM = ToUInt24(result, currentPos, true);
+                uint totalDistanceTest = ToUInt24(result, currentPos, false);
+                currentPos += 3;
+
+                Console.WriteLine("Total distance: " + totalDistanceM);
+            }
+
+
+            if (flags.Get(5))
+            {
+                var ResistanceLevel = ToByte(result, currentPos);
+                currentPos += 1;
+
+                Console.WriteLine("Resistance level: " + ResistanceLevel);
+            }
+            if (flags.Get(6))
+            {
+                var InstantaneousPower = BitConverter.ToInt16(result, currentPos);
+                currentPos += 2;
+                 
+                Console.WriteLine("Instantaneous power: " + InstantaneousPower);
+            }
+            if (flags.Get(7))
+            {
+                var AvgPowerM = BitConverter.ToInt16(result, currentPos);
+                currentPos += 2;
+
+                Console.WriteLine("Avg power: " + AvgPowerM);
+            }
+            if (flags.Get(8))
+            {
+                var TotalEnergyM = BitConverter.ToUInt16(result, currentPos);
+                currentPos += 2;
+
+                var EnergyHourM = BitConverter.ToUInt16(result, currentPos);
+                currentPos += 2;
+
+                var EnergyMinuteM = result[currentPos];
+                currentPos += 1;
+
+                Console.WriteLine("Total energy: " + TotalEnergyM);
+                Console.WriteLine("Energy hour: " + EnergyHourM);
+                Console.WriteLine("Energy min: " + EnergyMinuteM);
+
+            }
+
+            if (flags.Get(9))
+            {
+                var HeartRate = result[currentPos];
+                currentPos += 1;
+
+                Console.WriteLine("Heart Rate: " + HeartRate);
+            }
+            if (flags.Get(10))
+            {
+                var MetabolicEquivalent = result[currentPos];
+                currentPos += 1;
+                Console.WriteLine("Metabolic equivalent: " + MetabolicEquivalent);
+
+            }
+            if (flags.Get(11))
+            {
+                var ElapsedTime = BitConverter.ToUInt16(result, currentPos);
+                currentPos += 2;
+                Console.WriteLine("Elapsed time: " + ElapsedTime);
+
+            }
+            if (flags.Get(12))
+            {
+                var RemainingTime = BitConverter.ToUInt16(result, currentPos);
+                currentPos += 2;
+
+                Console.WriteLine("Remaining time: " + RemainingTime);
+
+            }
+
+
+        }
     }
 
     public enum MovementDirection { Forward, Backward }
