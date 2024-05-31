@@ -106,7 +106,6 @@ namespace BluetoothFTMS
         {
             // Procesar y mostrar datos recibidos
             var data = e.Value;
-            Console.WriteLine("Datos recibidos:");
 
             if (isIndoorBike)
             {
