@@ -327,13 +327,21 @@ namespace BluetoothFTMS
 
             int currentPos = 3;
 
+            var stb = new StringBuilder();
+
+            var date = DateTime.Now;
+
+            stb.Append(date.ToString("HH:mm:ss"));
+            stb.Append(" | ");
+
             if (!flags.Get(0))
             {
                 var InstantSpeed = BitConverter.ToUInt16(result, currentPos) * 0.01f;
                 var InstantSpeedTest = ToUInt16(result, currentPos) * 0.01f;
                 currentPos += 2;
 
-                Console.WriteLine("InstantSpeed: " + InstantSpeed);
+                stb.Append("InstantSpeed: " + InstantSpeed);
+                stb.Append(" | ");
             }
 
             if (flags.Get(1))
@@ -342,7 +350,8 @@ namespace BluetoothFTMS
                 var avgSpeedT = ToUInt16(result, currentPos) * 0.01f;
                 currentPos += 2;
 
-                Console.WriteLine("Average Speed: " + avgSpeedM);
+                stb.Append("Average Speed: " + avgSpeedM);
+                stb.Append(" | ");
             }
 
             if (flags.Get(2))
@@ -351,7 +360,8 @@ namespace BluetoothFTMS
                 uint totalDistanceTest = ToUInt24(result, currentPos, false);
                 currentPos += 3;
 
-                Console.WriteLine("Total distance: " + totalDistanceM);
+                stb.Append("Total distance: " + totalDistanceM);
+                stb.Append(" | ");
             }
 
             if (flags.Get(3))
@@ -361,14 +371,16 @@ namespace BluetoothFTMS
                 var StepPerMinuteFinal = (ushort)(stepPerMinute == 65535 ? 0 : stepPerMinute);
                 currentPos += 2;
 
-                Console.WriteLine("SPM: " + stepPerMinute);
+                stb.Append("SPM: " + stepPerMinute);
+                stb.Append(" | ");
 
                 ushort averageStepRate = BitConverter.ToUInt16(result, currentPos);
                 ushort averageStepRateT = ToUInt16(result, currentPos);
                 ushort AverageStepRateFinal = (ushort)(averageStepRate == 65535 ? 0 : averageStepRate);
                 currentPos += 2;
 
-                Console.WriteLine("Avg SP: " + averageStepRate);
+                stb.Append("Avg SP: " + averageStepRate);
+                stb.Append(" | ");
             }
 
             if (flags.Get(4))
@@ -377,7 +389,8 @@ namespace BluetoothFTMS
                 var StrideCountT = ToUInt16(result, currentPos);
                 currentPos += 2;
 
-                Console.WriteLine("Stride count: " + StrideCount);
+                stb.Append("Stride count: " + StrideCount);
+                stb.Append(" | ");
             }
 
             if (flags.Get(5))
@@ -386,7 +399,8 @@ namespace BluetoothFTMS
                 var PositiveElevationGainT = ToUInt16(result, currentPos);
                 currentPos += 2;
 
-                Console.WriteLine("Positive elevation: " + PositiveElevationGain);
+                stb.Append("Positive elevation: " + PositiveElevationGain);
+                stb.Append(" | ");
 
 
                 var NegativeElevationGain = BitConverter.ToUInt16(result, currentPos);
@@ -394,7 +408,8 @@ namespace BluetoothFTMS
                 currentPos += 2;
 
 
-                Console.WriteLine("Negative elevation: " + NegativeElevationGain);
+                stb.Append("Negative elevation: " + NegativeElevationGain);
+                stb.Append(" | ");
             }
 
 
@@ -405,14 +420,16 @@ namespace BluetoothFTMS
                 var Inclination = inclination == 32767 ? 0 : inclination;
                 currentPos += 2;
 
-                Console.WriteLine("Inclination: " + inclination);
+                stb.Append("Inclination: " + inclination);
+                stb.Append(" | ");
 
                 var rampAngle = BitConverter.ToInt16(result, currentPos) * 0.1f;
                 var rampAngleT = ToInt16(result, currentPos) * 0.1f;
                 var RampAngle = rampAngle == 32767 ? 0 : rampAngle;
                 currentPos += 2;
 
-                Console.WriteLine("Ramp angle: " + rampAngle);
+                stb.Append("Ramp angle: " + rampAngle);
+                stb.Append(" | ");
             }
 
             if (flags.Get(7))
@@ -422,7 +439,8 @@ namespace BluetoothFTMS
                 currentPos += 1;
 
 
-                Console.WriteLine("Resistance level: " + ResistanceLevel);
+                stb.Append("Resistance level: " + ResistanceLevel);
+                stb.Append(" | ");
             }
 
             if (flags.Get(8))
@@ -431,7 +449,8 @@ namespace BluetoothFTMS
                 var InstantaneousPowerTest = ToInt16(result, currentPos);
 
 
-                Console.WriteLine("Instantaneous power: " + InstantaneousPower);
+                stb.Append("Instantaneous power: " + InstantaneousPower);
+                stb.Append(" | ");
 
                 currentPos += 2;
             }
@@ -441,7 +460,8 @@ namespace BluetoothFTMS
                 var AveragePower = BitConverter.ToInt16(result, currentPos);
                 var AveragePowerT = ToInt16(result, currentPos);
 
-                Console.WriteLine("Average power: " + AveragePower);
+                stb.Append("Average power: " + AveragePower);
+                stb.Append(" | ");
 
                 currentPos += 2;
             }
@@ -452,21 +472,24 @@ namespace BluetoothFTMS
                 var totalEnergyTest = ToUInt16(result, currentPos);
                 currentPos += 2;
 
-                Console.WriteLine("Total energy: " + totalEnergyM);
+                stb.Append("Total energy: " + totalEnergyM);
+                stb.Append(" | ");
 
                 var energyHourM = BitConverter.ToUInt16(result, currentPos);
                 var energyHourTest = ToUInt16(result, currentPos);
                 currentPos += 2;
 
 
-                Console.WriteLine("Energy hour: " + energyHourM);
+                stb.Append("Energy hour: " + energyHourM);
+                stb.Append(" | ");
 
                 var energyMinuteM = result[currentPos];
                 var energyMinuteT = ToByte(result, currentPos);
                 currentPos += 1;
 
 
-                Console.WriteLine("Energy minute: " + energyMinuteM);
+                stb.Append("Energy minute: " + energyMinuteM);
+                stb.Append(" | ");
             }
 
 
@@ -476,7 +499,8 @@ namespace BluetoothFTMS
                 var HeartRateT = ToByte(result, currentPos);
                 currentPos += 1;
 
-                Console.WriteLine("Heart rate: " + HeartRate);
+                stb.Append("Heart rate: " + HeartRate);
+                stb.Append(" | ");
             }
 
             if (flags.Get(12))
@@ -486,7 +510,8 @@ namespace BluetoothFTMS
                 currentPos += 1;
 
 
-                Console.WriteLine("Metabolic equivalent:" + MetabolicEquivalent);
+                stb.Append("Metabolic equivalent:" + MetabolicEquivalent);
+                stb.Append(" | ");
             }
 
             if (flags.Get(13))
@@ -495,7 +520,8 @@ namespace BluetoothFTMS
                 var ElapsedTimeT = ToUInt16(result, currentPos);
                 currentPos += 2;
 
-                Console.WriteLine("Elapsed time:" + ElapsedTime);
+                stb.Append("Elapsed time:" + ElapsedTime);
+                stb.Append(" | ");
             }
 
             if (flags.Get(14))
@@ -504,12 +530,15 @@ namespace BluetoothFTMS
                 var RemainingTimeT = ToUInt16(result, currentPos);
                 currentPos += 2;
 
-                Console.WriteLine("Remaining time:" + RemainingTime);
+                stb.Append("Remaining time:" + RemainingTime);
+                stb.Append(" | ");
             }
 
             var direction = flags.Get(15) ? MovementDirection.Forward : MovementDirection.Backward;
 
-            Console.WriteLine("Direction:" + direction.ToString());
+            stb.Append("Direction:" + direction.ToString());
+
+            Console.WriteLine(stb.ToString());
 
         }
 
