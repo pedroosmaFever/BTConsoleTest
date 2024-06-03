@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using InTheHand.Net.Bluetooth;
 using InTheHand.Bluetooth;
-using InTheHand.Net.Sockets;
 using System.Text;
 using System.Diagnostics;
-//using InTheHand.Net.Bluetooth.AttributeIds.GenericAttributeProfile;
-
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using InTheHand.Bluetooth;
 using System.Collections;
 
 namespace BluetoothFTMS
@@ -19,6 +14,13 @@ namespace BluetoothFTMS
     class Program
     {
         static bool isIndoorBike = false;
+
+        /*
+        monitor eliptica => "B01_89CFE" : "C01_89CFE"; 
+        exercycle        => "B01_0F288"
+        bici matrix      => "C230100054"
+            
+         * */
 
         static async Task Main(string[] args)
         {
@@ -117,203 +119,6 @@ namespace BluetoothFTMS
                 //ProcessCrossTrainerDataT(data);
             }
         }
-
-        private static void ProcessIndoorBikeDataT(Span<byte> data)
-        {
-            // Decodificar los datos según el protocolo FTMS para Indoor Bike
-            if (data.Length >= 2)
-            {
-                var flags = data[0] | (data[1] << 8);
-
-                int index = 3;
-                if ((flags & 0x01) != 0 && data.Length >= index + 2) // Velocidad Instantánea
-                {
-                    var instantaneousSpeed = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0) / 100.0;
-                    index += 2;
-                    Console.WriteLine($"Velocidad Instantánea: {instantaneousSpeed} km/h");
-                }
-                if ((flags & 0x02) != 0 && data.Length >= index + 2) // Velocidad Promedio
-                {
-                    var averageSpeed = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0) / 100.0;
-                    index += 2;
-                    Console.WriteLine($"Velocidad Promedio: {averageSpeed} km/h");
-                }
-                if ((flags & 0x04) != 0 && data.Length >= index + 2) // Cadencia Instantánea
-                {
-                    var instantaneousCadence = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0) / 2.0;
-                    index += 2;
-                    Console.WriteLine($"Cadencia Instantánea: {instantaneousCadence} RPM");
-                }
-                if ((flags & 0x08) != 0 && data.Length >= index + 2) // Cadencia Promedio
-                {
-                    var averageCadence = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0) / 2.0;
-                    index += 2;
-                    Console.WriteLine($"Cadencia Promedio: {averageCadence} RPM");
-                }
-                if ((flags & 0x10) != 0 && data.Length >= index + 2) // Distancia Total
-                {
-                    var totalDistance = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Distancia Total: {totalDistance} m");
-                }
-                if ((flags & 0x20) != 0 && data.Length >= index + 2) // Nivel de Resistencia
-                {
-                    var resistanceLevel = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Nivel de Resistencia: {resistanceLevel}");
-                }
-                if ((flags & 0x40) != 0 && data.Length >= index + 2) // Potencia Instantánea
-                {
-                    var instantaneousPower = BitConverter.ToInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Potencia Instantánea: {instantaneousPower} W");
-                }
-                if ((flags & 0x80) != 0 && data.Length >= index + 2) // Potencia Promedio
-                {
-                    var averagePower = BitConverter.ToInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Potencia Promedio: {averagePower} W");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Formato de datos no reconocido.");
-            }
-        }
-
-        private static void ProcessCrossTrainerDataT(Span<byte> data)
-        {
-            // Decodificar los datos según el protocolo FTMS para Cross Trainer (Elíptica)
-            if (data.Length >= 2)
-            {
-                /*
-                var stb = new StringBuilder();
-
-                var timestamp = DateTime.Now;
-
-                stb.Append(timestamp.ToString("HH:mm:ss"));
-                stb.Append(" | ");
-                stb.Append(BitConverter.ToString(data.ToArray()));
-                Console.WriteLine(stb.ToString());
-                */
-
-                var flags = data[0] | (data[1] << 8) | (data[1] << 16);
-
-                int index = 3;
-                if ((flags & 0x01) == 0 && data.Length >= index + 2) // Velocidad Instantánea
-                {
-                    var instantaneousSpeed = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0) / 100.0;
-                    index += 2;
-                    Console.WriteLine($"Velocidad Instantánea: {instantaneousSpeed} km/h");
-                }
-                if ((flags & 0x02) != 0 && data.Length >= index + 2) // Velocidad Promedio
-                {
-                    var averageSpeed = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0) / 100.0;
-                    index += 2;
-                    Console.WriteLine($"Velocidad Promedio: {averageSpeed} km/h");
-                }
-                if ((flags & 0x04) != 0 && data.Length >= index + 3) // Distancia Total
-                {
-                    var totalDistance = ToUInt24(data.Slice(index, 4).ToArray(), 0);
-                    index += 3;
-                    Console.WriteLine($"Distancia Total: {totalDistance} m");
-                }
-                if ((flags & 0x08) != 0 && data.Length >= index + 4) // Cuenta de Pasos
-                {
-                    var spm = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    var stepCount = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Pasos minuto: {spm}");
-                    Console.WriteLine($"Cuenta de Pasos: {stepCount}");
-                }
-                if ((flags & 0x10) != 0 && data.Length >= index + 2) // Cuenta de Zancadas
-                {
-                    var strideCount = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Cuenta de Zancadas: {strideCount}");
-                }
-                if ((flags & 0x20) != 0 && data.Length >= index + 2) // Elevación Ganada
-                {
-                    var elevationGain = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Elevación Ganada: {elevationGain} m");
-                }
-                if ((flags & 0x40) != 0 && data.Length >= index + 4) // Inclinación y Ángulo de Rampa
-                {
-                    var inclination = BitConverter.ToInt16(data.Slice(index, 2).ToArray(), 0) / 10.0;
-                    index += 2;
-                    var rampAngle = BitConverter.ToInt16(data.Slice(index, 2).ToArray(), 0) / 10.0;
-                    index += 2;
-                    Console.WriteLine($"Inclinación: {inclination}°");
-                    Console.WriteLine($"Ángulo de Rampa: {rampAngle}°");
-                }
-                if ((flags & 0x80) != 0 && data.Length >= index + 2) // Nivel de Resistencia
-                {
-                    var resistanceLevel = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Nivel de Resistencia: {resistanceLevel}");
-                }
-                if ((flags & 0x100) != 0 && data.Length >= index + 2) // Potencia Instantánea
-                {
-                    var instantaneousPower = BitConverter.ToInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Potencia Instantánea: {instantaneousPower} W");
-                }
-                if ((flags & 0x200) != 0 && data.Length >= index + 2) // Potencia Promedio
-                {
-                    var averagePower = BitConverter.ToInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Potencia Promedio: {averagePower} W");
-                }
-                if ((flags & 0x400) != 0 && data.Length >= index + 6) // Energía Consumida
-                {
-                    var totalEnergy = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    var energyPerHour = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    var energyPerMinute = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Energía Total: {totalEnergy} kJ");
-                    Console.WriteLine($"Energía por Hora: {energyPerHour} kJ/h");
-                    Console.WriteLine($"Energía por Minuto: {energyPerMinute} kJ/min");
-                }
-                if ((flags & 0x800) != 0 && data.Length >= index + 1) // Frecuencia Cardíaca
-                {
-                    var heartRate = data[index];
-                    index += 1;
-                    Console.WriteLine($"Frecuencia Cardíaca: {heartRate} BPM");
-                }
-                if ((flags & 0x1000) != 0 && data.Length >= index + 1) // Equivalente Metabólico
-                {
-                    var metabolicEquivalent = data[index];
-                    index += 1;
-                    Console.WriteLine($"Equivalente Metabólico: {metabolicEquivalent} METs");
-                }
-                if ((flags & 0x2000) != 0 && data.Length >= index + 2) // Tiempo Transcurrido
-                {
-                    var elapsedTime = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Tiempo Transcurrido: {elapsedTime} s");
-                }
-                if ((flags & 0x4000) != 0 && data.Length >= index + 2) // Tiempo Restante
-                {
-                    var remainingTime = BitConverter.ToUInt16(data.Slice(index, 2).ToArray(), 0);
-                    index += 2;
-                    Console.WriteLine($"Tiempo Restante: {remainingTime} s");
-                }
-                if ((flags & 0x8000) != 0) // Dirección del Movimiento
-                {
-                    var movementDirection = (flags & 0x8000) != 0 ? "Backward" : "Forward";
-                    Console.WriteLine($"Dirección del Movimiento: {movementDirection}");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Formato de datos no reconocido.");
-            }
-        }
-
 
         public static void ProcessCrossTrainerData(Span<byte> data)
         {
@@ -582,9 +387,9 @@ namespace BluetoothFTMS
                 if (littleEndian)
                 {
                     result = (uint)(
-                        (data[position + 2])
+                        (data[position + 2] << 16)
                         | (data[position + 1] << 8)
-                        | (data[position] << 16)
+                        | (data[position])
                     );
                 }
                 else
@@ -609,6 +414,19 @@ namespace BluetoothFTMS
             var flags1 = result[0];
             var flags2 = result[1];
             BitArray flags = new BitArray(new byte[] { flags1, flags2 });
+
+            var binaryFlags = "";
+            for(int i = 0; i < flags.Length; i++)
+            {
+                binaryFlags += flags.Get(i) ? "1" : "0";
+                if (i ==  7)
+                {
+                    binaryFlags += " ";
+                }
+            }
+
+            //Console.WriteLine(binaryFlags);
+
             int currentPos = 2;
 
             var stb = new StringBuilder();
@@ -661,15 +479,15 @@ namespace BluetoothFTMS
                 uint totalDistanceTest = ToUInt24(result, currentPos, false);
                 currentPos += 3;
 
-                stb.Append("Total distance: " + totalDistanceM);
+                stb.Append("Total distance: " + totalDistanceM + " m " + (totalDistanceM/1000) + "km");
                 stb.Append(" | ");
             }
 
 
             if (flags.Get(5))
             {
-                var ResistanceLevel = ToByte(result, currentPos);
-                currentPos += 1;
+                var ResistanceLevel = BitConverter.ToInt16(result, currentPos);
+                currentPos += 2;
 
                 stb.Append("Resistance level: " + ResistanceLevel);
                 stb.Append(" | ");
@@ -715,8 +533,10 @@ namespace BluetoothFTMS
                 var HeartRate = result[currentPos];
                 currentPos += 1;
 
-                Console.WriteLine("Heart Rate: " + HeartRate);
+                stb.Append("Heart Rate: " + HeartRate);
+                stb.Append(" | ");
             }
+
             if (flags.Get(10))
             {
                 var MetabolicEquivalent = result[currentPos];
