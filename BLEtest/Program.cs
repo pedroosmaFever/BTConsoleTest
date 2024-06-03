@@ -238,9 +238,8 @@ namespace BluetoothFTMS
 
             if (flags.Get(7))
             {
-                var ResistanceLevel = ToByte(result, currentPos);
-                var ResistanceLevelT = result[currentPos];
-                currentPos += 1;
+                var ResistanceLevel = BitConverter.ToInt16(result, currentPos);
+                currentPos += 2;
 
 
                 stb.Append("Resistance level: " + ResistanceLevel);
